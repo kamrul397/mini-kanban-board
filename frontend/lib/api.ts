@@ -63,7 +63,10 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
             localStorage.removeItem('user');
             window.location.href = '/login';
         }
-        throw new Error(data.message || 'API request failed');
+        const errorMsg = Array.isArray(data.message)
+            ? data.message.join(', ')
+            : data.message || data.error || `HTTP ${res.status}: ${res.statusText || 'API request failed'}`;
+        throw new Error(errorMsg);
     }
 
     return data as T;

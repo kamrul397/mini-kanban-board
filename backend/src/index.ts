@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import boardRoutes from './routes/board.routes.js';
 import columnRoutes from './routes/column.routes.js';
 import taskRoutes from './routes/task.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
+app.use('/api/users', userRoutes);
 
 app.use('/api/columns', columnRoutes);
 app.use('/api/tasks', taskRoutes);

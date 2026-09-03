@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AuthContextType {
     user: User | null;
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         const savedToken = localStorage.getItem('token');
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (email: string, password: string) => {
+        queryClient.clear(); // Clear all memory cache from any prior user
         const data = await apiFetch<{ token: string; user: User }>('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const register = async (name: string, email: string, password: string) => {
+        queryClient.clear(); // Clear all memory cache from any prior user
         await apiFetch('/auth/register', {
             method: 'POST',
             body: JSON.stringify({ name, email, password }),
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('user');
         setToken(null);
         setUser(null);
+        queryClient.clear(); // Immediately wipe all cached data so next user starts completely fresh
         router.push('/login');
     };
 
