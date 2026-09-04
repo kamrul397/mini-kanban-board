@@ -4,12 +4,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, isFromRegister?: boolean) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
 }
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, isFromRegister = false) => {
         queryClient.clear(); // Clear all memory cache from any prior user
         const data = await apiFetch<{ token: string; user: User }>('/auth/login', {
             method: 'POST',
@@ -43,6 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('user', JSON.stringify(data.user));
         setToken(data.token);
         setUser(data.user);
+        if (!isFromRegister) {
+            toast.success(`Welcome back, ${data.user.name || data.user.email}!`);
+        }
         router.push('/boards');
     };
 
@@ -52,7 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             method: 'POST',
             body: JSON.stringify({ name, email, password }),
         });
-        await login(email, password);
+        toast.success(`Account created successfully! Welcome, ${name || email}!`);
+        await login(email, password, true);
     };
 
     const logout = () => {
@@ -61,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null);
         setUser(null);
         queryClient.clear(); // Immediately wipe all cached data so next user starts completely fresh
+        toast.success('Signed out successfully');
         router.push('/login');
     };
 

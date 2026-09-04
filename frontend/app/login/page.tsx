@@ -34,12 +34,12 @@ export default function LoginPage() {
 
             <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl bg-slate-900/80 backdrop-blur-2xl shadow-2xl border border-slate-800/90 overflow-hidden relative z-10 animate-modal">
                 
-                {/* Left Side: Showcase Feature Panel */}
+                {/* Left Side: Why Use Mini Kanban Panel */}
                 <div className="lg:col-span-5 p-8 lg:p-10 bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950/90 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80">
                     <div>
                         <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-6">
                             <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>Real-Time Kanban Platform</span>
+                            <span>Everyday Task Management</span>
                         </div>
 
                         <div className="flex items-center gap-3 mb-4">
@@ -49,29 +49,33 @@ export default function LoginPage() {
                             <span className="text-xl font-bold tracking-tight text-white">Mini Kanban</span>
                         </div>
 
-                        <p className="text-slate-400 text-xs leading-relaxed mb-8">
-                            Experience effortless task coordination with instant drag-and-drop, role permissions, and live collaborator updates.
+                        <p className="text-slate-300 text-xs leading-relaxed mb-8">
+                            Transform your daily routine into a calm, focused workflow. From personal errands and study goals to team project milestones, keep every priority on track.
                         </p>
 
                         <div className="space-y-3.5">
                             <div className="flex items-center gap-3 text-xs text-slate-300">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Smooth fractional-index drag & drop</span>
+                                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                                <span><strong className="text-indigo-300">Solo Personal Focus:</strong> Organize daily tasks, study plans, and errands in a private space</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Editor & Viewer collaboration roles</span>
+                                <span><strong className="text-emerald-300">Group Task Tracking:</strong> Invite your squad as Editors to plan and move cards together</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-slate-300">
+                                <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                                <span><strong className="text-amber-300">Showcase Progress:</strong> Add clients or managers as Viewers to share live updates safely</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Live search & custom workflow stages</span>
+                                <span>Customizable columns: To Do, In Progress, Review, and Done</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-500">
-                        <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                        <span>Protected by JWT & secure session tokens</span>
+                    <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-400">
+                        <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span>Simple, stress-free productivity for your everyday life</span>
                     </div>
                 </div>
 
@@ -83,9 +87,19 @@ export default function LoginPage() {
                     </div>
 
                     {error && (
-                        <div className="mb-5 p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-200 text-xs flex items-center gap-3 shadow-lg shadow-red-500/10">
-                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                            <span className="font-medium">{error}</span>
+                        <div className="mb-5 p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-200 text-xs flex items-center justify-between gap-3 shadow-lg shadow-red-500/10">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                                <span className="font-medium truncate">{error}</span>
+                            </div>
+                            {error.includes('No account found') && (
+                                <Link
+                                    href="/register"
+                                    className="text-indigo-300 hover:text-white underline font-semibold shrink-0 transition"
+                                >
+                                    Register now →
+                                </Link>
+                            )}
                         </div>
                     )}
 
@@ -163,13 +177,22 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
+                    <div className="mt-8 pt-6 border-t border-slate-800/80 text-center space-y-2">
                         <p className="text-xs text-slate-400">
                             Don't have an account?{' '}
                             <Link href="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
                                 Create an account
                             </Link>
                         </p>
+                        <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 pt-1">
+                            <Link href="/how-it-works" className="hover:text-indigo-400 transition">
+                                How It Works
+                            </Link>
+                            <span>&bull;</span>
+                            <Link href="/about" className="hover:text-indigo-400 transition">
+                                About Project
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

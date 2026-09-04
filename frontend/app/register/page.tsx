@@ -35,12 +35,12 @@ export default function RegisterPage() {
 
             <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl bg-slate-900/80 backdrop-blur-2xl shadow-2xl border border-slate-800/90 overflow-hidden relative z-10 animate-modal">
                 
-                {/* Left Side: Showcase Feature Panel */}
+                {/* Left Side: Why Use Mini Kanban Panel */}
                 <div className="lg:col-span-5 p-8 lg:p-10 bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950/90 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80">
                     <div>
                         <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-6">
                             <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>Instant Setup</span>
+                            <span>Everyday Task Management</span>
                         </div>
 
                         <div className="flex items-center gap-3 mb-4">
@@ -50,29 +50,33 @@ export default function RegisterPage() {
                             <span className="text-xl font-bold tracking-tight text-white">Mini Kanban</span>
                         </div>
 
-                        <p className="text-slate-400 text-xs leading-relaxed mb-8">
-                            Join thousands of developers using Mini Kanban for high-velocity sprint workflows, smooth task planning, and zero-latency collaboration.
+                        <p className="text-slate-300 text-xs leading-relaxed mb-8">
+                            Discover a clearer way to organize your days, achieve personal goals, and keep work moving forward with effortless visual simplicity.
                         </p>
 
                         <div className="space-y-3.5">
                             <div className="flex items-center gap-3 text-xs text-slate-300">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>No credit card required — free forever</span>
+                                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                                <span><strong className="text-indigo-300">Solo Personal Focus:</strong> Organize daily to-dos, habits, and priorities in a private workspace</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Built-in real-time role permissions</span>
+                                <span><strong className="text-emerald-300">Group Task Tracking:</strong> Invite your team as Editors to build & complete tasks together</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-slate-300">
+                                <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                                <span><strong className="text-amber-300">Showcase Progress:</strong> Add clients or managers as Viewers for safe live status visibility</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Fluid drag-and-drop workflow tracking</span>
+                                <span>Turn chaos into calm with visual To Do, Doing & Done stages</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-500">
-                        <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                        <span>Protected by JWT & secure session tokens</span>
+                    <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-400">
+                        <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span>100% Free & No Complex Setup Required</span>
                     </div>
                 </div>
 
@@ -184,13 +188,22 @@ export default function RegisterPage() {
                         </button>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
+                    <div className="mt-8 pt-6 border-t border-slate-800/80 text-center space-y-2">
                         <p className="text-xs text-slate-400">
                             Already have an account?{' '}
                             <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
                                 Sign in instead
                             </Link>
                         </p>
+                        <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 pt-1">
+                            <Link href="/how-it-works" className="hover:text-indigo-400 transition">
+                                How It Works
+                            </Link>
+                            <span>&bull;</span>
+                            <Link href="/about" className="hover:text-indigo-400 transition">
+                                About Project
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

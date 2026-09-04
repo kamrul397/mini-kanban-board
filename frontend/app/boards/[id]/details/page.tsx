@@ -26,7 +26,10 @@ import {
     Eye,
     Kanban,
     Mail,
-    UserPlus
+    UserPlus,
+    HelpCircle,
+    Info,
+    CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -80,6 +83,12 @@ export default function BoardDetailsPage() {
     const [shareSubmitting, setShareSubmitting] = useState(false);
     const [userDirectorySearch, setUserDirectorySearch] = useState('');
     const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
+
+    // Email format validator: must match user@domain.tld
+    const isValidShareEmail = useMemo(() => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(shareEmail.trim());
+    }, [shareEmail]);
 
     // Delete confirmation state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -472,7 +481,7 @@ export default function BoardDetailsPage() {
                     <div>
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Users className="w-5 h-5 text-indigo-400" /> Collaborator Directory
+                                <Users className="w-5 h-5 text-indigo-400" /> Collaborator Directory & Access Control
                             </h2>
                             <span className="text-xs text-slate-400">
                                 {1 + (board.members?.length || 0)} active members
@@ -481,6 +490,45 @@ export default function BoardDetailsPage() {
                         <p className="text-xs text-slate-400 mt-0.5">
                             {canShare ? 'Invite registered team members and manage their roles' : 'View members and their permission levels'}
                         </p>
+                    </div>
+
+                    {/* How Sharing Works Guide Banner */}
+                    <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/25 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0">
+                                <Info className="w-3.5 h-3.5" />
+                            </div>
+                            <h3 className="text-xs font-semibold text-white tracking-wide uppercase">
+                                How Sharing & Collaboration Works
+                            </h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-left">
+                            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block mb-1">
+                                    1. User-Based Access
+                                </span>
+                                <p className="text-[11px] text-slate-300 leading-relaxed">
+                                    Collaborators must have a registered account on the platform. They can sign up at any time via the register page.
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-1">
+                                    2. Group Task Tracking vs Stakeholder Showcases
+                                </span>
+                                <p className="text-[11px] text-slate-300 leading-relaxed">
+                                    <strong className="text-emerald-300">Editor (Working Team):</strong> Invite a group of people to actively manage tasks, reorder cards, and coordinate everyday sprints together.<br />
+                                    <strong className="text-amber-300">Viewer (Showcase Progress):</strong> Give stakeholders, managers, or clients safe real-time visibility to monitor delivery without risk of accidental changes.
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400 block mb-1">
+                                    3. Instant Synchronization
+                                </span>
+                                <p className="text-[11px] text-slate-300 leading-relaxed">
+                                    Once invited, the board appears immediately on the collaborator's workspace dashboard with their assigned permissions.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Invite Section (for Owners & Editors) */}
@@ -579,38 +627,76 @@ export default function BoardDetailsPage() {
                             <div className="pt-4 border-t border-slate-800/80">
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                                        <UserPlus className="w-3.5 h-3.5 text-indigo-400" /> Direct Invite
+                                        <UserPlus className="w-3.5 h-3.5 text-indigo-400" /> Direct Invite by Email
                                     </p>
                                     <span className="text-[10px] text-slate-500">For colleagues by email</span>
                                 </div>
-                                <form onSubmit={handleDirectInvite} className="flex flex-col sm:flex-row gap-2">
-                                    <div className="relative flex-1">
+                                <div className="space-y-2">
+                                    <div className="relative">
                                         <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                         <input
                                             type="email"
-                                            required
                                             value={shareEmail}
                                             onChange={(e) => setShareEmail(e.target.value)}
-                                            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
-                                            placeholder="colleague@example.com"
+                                            className={`w-full pl-9 pr-7 py-2.5 rounded-xl bg-slate-900 border text-white placeholder-slate-500 focus:outline-none text-xs transition ${
+                                                shareEmail.trim().length > 0 && !isValidShareEmail
+                                                    ? 'border-amber-500/50 focus:border-amber-500'
+                                                    : isValidShareEmail
+                                                    ? 'border-emerald-500/50 focus:border-emerald-500'
+                                                    : 'border-slate-800 focus:border-indigo-500'
+                                            }`}
+                                            placeholder="Enter colleague's registered email address..."
                                         />
+                                        {shareEmail && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShareEmail('')}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                                title="Clear email"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                     </div>
-                                    <select
-                                        value={shareRole}
-                                        onChange={(e) => setShareRole(e.target.value as 'EDITOR' | 'VIEWER')}
-                                        className="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition cursor-pointer"
-                                    >
-                                        <option value="EDITOR">Editor (Can manage tasks & columns)</option>
-                                        <option value="VIEWER">Viewer (Read-only access)</option>
-                                    </select>
-                                    <button
-                                        type="submit"
-                                        disabled={shareSubmitting}
-                                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0 active:scale-95"
-                                    >
-                                        {shareSubmitting ? 'Inviting...' : 'Invite'}
-                                    </button>
-                                </form>
+
+                                    {/* Incomplete email hint */}
+                                    {shareEmail.trim().length > 0 && !isValidShareEmail && (
+                                        <p className="text-[11px] text-amber-400/80 pl-1 flex items-center gap-1">
+                                            Please enter a valid email address (e.g. name@domain.com)
+                                        </p>
+                                    )}
+
+                                    {/* Role action buttons - revealed only when a valid email is typed */}
+                                    {isValidShareEmail && (
+                                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 animate-fade-in shadow-sm shadow-emerald-500/5">
+                                            <span className="text-[11px] text-emerald-300 font-medium flex items-center gap-1.5">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Invite as:
+                                            </span>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    disabled={shareSubmitting}
+                                                    onClick={() => handleQuickInvite(shareEmail.trim(), 'EDITOR')}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition cursor-pointer disabled:opacity-50 active:scale-95"
+                                                    title="Invite as Editor (can manage tasks & columns)"
+                                                >
+                                                    <Shield className="w-3 h-3 text-emerald-400" />
+                                                    <span>+ Editor</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={shareSubmitting}
+                                                    onClick={() => handleQuickInvite(shareEmail.trim(), 'VIEWER')}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-medium transition cursor-pointer disabled:opacity-50 active:scale-95"
+                                                    title="Invite as Viewer (read-only access)"
+                                                >
+                                                    <Eye className="w-3 h-3 text-amber-300" />
+                                                    <span>+ Viewer</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}

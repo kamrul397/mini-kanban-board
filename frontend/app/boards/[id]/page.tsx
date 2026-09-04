@@ -32,7 +32,10 @@ import {
     AlertCircle,
     LogOut,
     Mail,
-    UserPlus
+    UserPlus,
+    ExternalLink,
+    CheckCircle2,
+    Columns3
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -76,6 +79,12 @@ export default function BoardDetailPage() {
     const [shareEmail, setShareEmail] = useState('');
     const [shareRole, setShareRole] = useState<'EDITOR' | 'VIEWER'>('EDITOR');
     const [shareSubmitting, setShareSubmitting] = useState(false);
+
+    // Email format validator: must match user@domain.tld
+    const isValidShareEmail = useMemo(() => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(shareEmail.trim());
+    }, [shareEmail]);
 
     // Edit Board state
     const [showEditBoardModal, setShowEditBoardModal] = useState(false);
@@ -907,10 +916,55 @@ export default function BoardDetailPage() {
 
             {/* Modal: Add Column */}
             {showAddColumnModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="w-full max-w-md bg-slate-900/95 rounded-3xl p-6 md:p-8 border border-slate-800 shadow-2xl animate-modal">
-                        <h2 className="text-xl font-bold mb-1 text-white">Add Workflow Column</h2>
-                        <p className="text-xs text-slate-400 mb-6">Create a new stage in your Kanban board flow</p>
+                <div
+                    className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setShowAddColumnModal(false);
+                    }}
+                >
+                    <div className="w-full max-w-md bg-slate-900/95 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl shadow-indigo-950/40 animate-modal relative overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-4 mb-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
+                                    <Columns3 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white tracking-tight">Add Workflow Column</h2>
+                                    <p className="text-xs text-slate-400 mt-0.5">Create a new stage in your Kanban board flow</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowAddColumnModal(false)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Preset Suggestions */}
+                        <div className="mb-4">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                                Quick Suggestions
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {['Backlog', 'In Review', 'QA Testing', 'Blocked', 'Done'].map((preset) => (
+                                    <button
+                                        key={preset}
+                                        type="button"
+                                        onClick={() => setNewColumnTitle(preset)}
+                                        className={`text-xs px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                            newColumnTitle === preset
+                                                ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 font-medium'
+                                                : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                                        }`}
+                                    >
+                                        + {preset}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <form onSubmit={handleCreateColumn} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
@@ -922,23 +976,24 @@ export default function BoardDetailPage() {
                                     autoFocus
                                     value={newColumnTitle}
                                     onChange={(e) => setNewColumnTitle(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm transition"
-                                    placeholder="e.g. In Review, QA, Backlog"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
+                                    placeholder="e.g. In Review, QA Testing, Backlog"
                                 />
                             </div>
-                            <div className="flex justify-end gap-3 mt-8">
+                            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-800/80">
                                 <button
                                     type="button"
                                     onClick={() => setShowAddColumnModal(false)}
-                                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition cursor-pointer"
+                                    className="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-xs sm:text-sm font-medium transition cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition shadow-lg shadow-indigo-600/20 cursor-pointer"
+                                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95"
                                 >
-                                    Create Column
+                                    <Plus className="w-4 h-4" />
+                                    <span>Create Stage</span>
                                 </button>
                             </div>
                         </form>
@@ -948,10 +1003,30 @@ export default function BoardDetailPage() {
 
             {/* Modal: Add Task */}
             {newTaskColumnId && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="w-full max-w-md bg-slate-900/95 rounded-3xl p-6 md:p-8 border border-slate-800 shadow-2xl animate-modal">
-                        <h2 className="text-xl font-bold mb-1 text-white">Add New Task</h2>
-                        <p className="text-xs text-slate-400 mb-6">Define deliverables and actionable details</p>
+                <div
+                    className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setNewTaskColumnId(null);
+                    }}
+                >
+                    <div className="w-full max-w-md bg-slate-900/95 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl shadow-indigo-950/40 animate-modal relative overflow-hidden">
+                        <div className="flex items-start justify-between gap-4 mb-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
+                                    <Plus className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white tracking-tight">Add New Task</h2>
+                                    <p className="text-xs text-slate-400 mt-0.5">Define deliverables and actionable details</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setNewTaskColumnId(null)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                         <form onSubmit={handleCreateTask} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
@@ -963,7 +1038,7 @@ export default function BoardDetailPage() {
                                     autoFocus
                                     value={taskTitle}
                                     onChange={(e) => setTaskTitle(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm transition"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
                                     placeholder="What needs to be done?"
                                 />
                             </div>
@@ -975,23 +1050,24 @@ export default function BoardDetailPage() {
                                     rows={3}
                                     value={taskDesc}
                                     onChange={(e) => setTaskDesc(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm transition"
+                                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition resize-none"
                                     placeholder="Additional context or acceptance criteria..."
                                 />
                             </div>
-                            <div className="flex justify-end gap-3 mt-8">
+                            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-800/80">
                                 <button
                                     type="button"
                                     onClick={() => setNewTaskColumnId(null)}
-                                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition cursor-pointer"
+                                    className="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-xs sm:text-sm font-medium transition cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition shadow-lg shadow-indigo-600/20 cursor-pointer"
+                                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95"
                                 >
-                                    Add Task
+                                    <Plus className="w-4 h-4" />
+                                    <span>Add Task</span>
                                 </button>
                             </div>
                         </form>
@@ -1244,7 +1320,7 @@ export default function BoardDetailPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-bold text-white tracking-tight">Invite Collaborators</h2>
-                                    <p className="text-[11px] text-slate-400">Add team members with Editor or Viewer privileges</p>
+                                    <p className="text-[11px] text-slate-400">Invite as Editors (group task tracking) or Viewers (showcase progress)</p>
                                 </div>
                             </div>
                             <button
@@ -1353,44 +1429,95 @@ export default function BoardDetailPage() {
                                     </p>
                                     <span className="text-[10px] text-slate-500">For colleagues by email</span>
                                 </div>
-                                <form onSubmit={handleShareBoard} className="flex gap-2">
-                                    <div className="relative flex-1">
+                                <div className="space-y-2">
+                                    <div className="relative">
                                         <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                                         <input
                                             type="email"
-                                            required
                                             value={shareEmail}
                                             onChange={(e) => setShareEmail(e.target.value)}
-                                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
-                                            placeholder="colleague@example.com"
+                                            className={`w-full pl-9 pr-7 py-2 rounded-xl bg-slate-950/80 border text-white placeholder-slate-500 focus:outline-none text-xs transition ${
+                                                shareEmail.trim().length > 0 && !isValidShareEmail
+                                                    ? 'border-amber-500/50 focus:border-amber-500'
+                                                    : isValidShareEmail
+                                                    ? 'border-emerald-500/50 focus:border-emerald-500'
+                                                    : 'border-slate-800 focus:border-indigo-500'
+                                            }`}
+                                            placeholder="Enter colleague's email address..."
                                         />
+                                        {shareEmail && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShareEmail('')}
+                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                                title="Clear email"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                     </div>
-                                    <select
-                                        value={shareRole}
-                                        onChange={(e) => setShareRole(e.target.value as 'EDITOR' | 'VIEWER')}
-                                        className="px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition cursor-pointer"
-                                    >
-                                        <option value="EDITOR">Editor</option>
-                                        <option value="VIEWER">Viewer</option>
-                                    </select>
-                                    <button
-                                        type="submit"
-                                        disabled={shareSubmitting}
-                                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0 active:scale-95"
-                                    >
-                                        {shareSubmitting ? 'Inviting...' : 'Invite'}
-                                    </button>
-                                </form>
+
+                                    {/* Hint when typing an incomplete email */}
+                                    {shareEmail.trim().length > 0 && !isValidShareEmail && (
+                                        <p className="text-[11px] text-amber-400/80 pl-1 flex items-center gap-1">
+                                            Please enter a valid email address (e.g. name@domain.com)
+                                        </p>
+                                    )}
+
+                                    {/* Role action buttons - active and visible only when a VALID email is entered */}
+                                    {isValidShareEmail && (
+                                        <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950/90 border border-emerald-500/30 animate-fade-in shadow-sm shadow-emerald-500/5">
+                                            <span className="text-[11px] text-emerald-300 font-medium flex items-center gap-1.5">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Invite as:
+                                            </span>
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    disabled={shareSubmitting}
+                                                    onClick={() => handleQuickInvite(shareEmail.trim(), 'EDITOR')}
+                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition cursor-pointer disabled:opacity-50 active:scale-95"
+                                                    title="Invite as Editor (can manage tasks & columns)"
+                                                >
+                                                    <Shield className="w-3 h-3 text-emerald-400" />
+                                                    <span>+ Editor</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={shareSubmitting}
+                                                    onClick={() => handleQuickInvite(shareEmail.trim(), 'VIEWER')}
+                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-medium transition cursor-pointer disabled:opacity-50 active:scale-95"
+                                                    title="Invite as Viewer (read-only access)"
+                                                >
+                                                    <Eye className="w-3 h-3 text-amber-300" />
+                                                    <span>+ Viewer</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Link to Board Details */}
-                            <div className="pt-2 text-center">
+                            {/* Polished Link to Board Details */}
+                            <div className="pt-2">
                                 <Link
                                     href={`/boards/${id}/details`}
                                     onClick={() => setShowShareModal(false)}
-                                    className="text-[11px] text-indigo-400 hover:text-indigo-300 transition hover:underline inline-flex items-center gap-1"
+                                    className="group/link flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-indigo-500/40 text-slate-300 hover:text-white transition shadow-sm"
                                 >
-                                    Manage existing collaborators in Board Details →
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                                            <Users className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div className="min-w-0 text-left">
+                                            <p className="text-xs font-medium text-slate-200 group-hover/link:text-indigo-300 transition truncate">
+                                                Manage Existing Collaborators
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 truncate">
+                                                View member list, modify roles, or remove permissions in Board Details
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/link:text-indigo-400 group-hover/link:translate-x-0.5 transition shrink-0 ml-2" />
                                 </Link>
                             </div>
                         </div>
