@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { Layout, Lock, Mail, ArrowRight, Eye, EyeOff, CheckCircle2, ShieldCheck, Zap, Users } from 'lucide-react';
+import { Layout, Lock, Mail, ArrowRight, Eye, EyeOff, CheckCircle2, ShieldCheck, Zap, Users, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -83,9 +83,9 @@ export default function LoginPage() {
                     </div>
 
                     {error && (
-                        <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs flex items-center gap-2.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span>{error}</span>
+                        <div className="mb-5 p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-200 text-xs flex items-center gap-3 shadow-lg shadow-red-500/10">
+                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                            <span className="font-medium">{error}</span>
                         </div>
                     )}
 
@@ -100,7 +100,10 @@ export default function LoginPage() {
                                     type="email"
                                     required
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (error) setError('');
+                                    }}
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
                                     placeholder="name@example.com"
                                 />
@@ -117,21 +120,28 @@ export default function LoginPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (error) setError('');
+                                    }}
+                                    className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
                                     placeholder="••••••••"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer z-10"
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all cursor-pointer z-10 flex items-center justify-center ${
+                                        showPassword
+                                            ? 'text-indigo-300 bg-indigo-500/20 border border-indigo-500/30 shadow-sm shadow-indigo-500/25 ring-1 ring-indigo-500/30'
+                                            : 'text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 shadow-sm'
+                                    }`}
                                     title={showPassword ? 'Hide password' : 'Show password'}
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? (
-                                        <EyeOff className="w-4 h-4 text-indigo-400" />
+                                        <EyeOff className="w-4 h-4 text-indigo-300" />
                                     ) : (
-                                        <Eye className="w-4 h-4 text-slate-400" />
+                                        <Eye className="w-4 h-4 text-white" />
                                     )}
                                 </button>
                             </div>

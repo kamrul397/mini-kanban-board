@@ -58,7 +58,8 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-        if (res.status === 401 && typeof window !== 'undefined') {
+        // Only redirect to /login if 401 occurred on a protected route, NOT during login/register!
+        if (res.status === 401 && typeof window !== 'undefined' && !endpoint.startsWith('/auth/')) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';

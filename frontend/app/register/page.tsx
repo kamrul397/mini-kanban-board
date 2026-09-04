@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { Layout, User, Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle2, ShieldCheck, Sparkles, Layers } from 'lucide-react';
+import { Layout, Lock, Mail, User, ArrowRight, Eye, EyeOff, CheckCircle2, ShieldCheck, Zap, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
     const { register } = useAuth();
@@ -35,12 +35,12 @@ export default function RegisterPage() {
 
             <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl bg-slate-900/80 backdrop-blur-2xl shadow-2xl border border-slate-800/90 overflow-hidden relative z-10 animate-modal">
                 
-                {/* Left Side: Features & Value Proposition */}
+                {/* Left Side: Showcase Feature Panel */}
                 <div className="lg:col-span-5 p-8 lg:p-10 bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950/90 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80">
                     <div>
                         <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-6">
-                            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>Free & Open Collaboration</span>
+                            <Zap className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Instant Setup</span>
                         </div>
 
                         <div className="flex items-center gap-3 mb-4">
@@ -51,32 +51,32 @@ export default function RegisterPage() {
                         </div>
 
                         <p className="text-slate-400 text-xs leading-relaxed mb-8">
-                            Create workflows, assign roles, and streamline project tasks across your entire engineering team.
+                            Join thousands of developers using Mini Kanban for high-velocity sprint workflows, smooth task planning, and zero-latency collaboration.
                         </p>
 
                         <div className="space-y-3.5">
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Unlimited personal and shared boards</span>
+                                <span>No credit card required — free forever</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Real-time column and card sync</span>
+                                <span>Built-in real-time role permissions</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-slate-300">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>No setup required — start organizing in seconds</span>
+                                <span>Fluid drag-and-drop workflow tracking</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-500">
-                        <Layers className="w-4 h-4 text-indigo-400" />
-                        <span>Built for modern fast-moving teams</span>
+                        <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                        <span>Protected by JWT & secure session tokens</span>
                     </div>
                 </div>
 
-                {/* Right Side: Registration Form */}
+                {/* Right Side: Auth Form */}
                 <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center">
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold text-white tracking-tight">Create Account</h2>
@@ -84,9 +84,9 @@ export default function RegisterPage() {
                     </div>
 
                     {error && (
-                        <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs flex items-center gap-2.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                            <span>{error}</span>
+                        <div className="mb-5 p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-200 text-xs flex items-center gap-3 shadow-lg shadow-red-500/10">
+                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                            <span className="font-medium">{error}</span>
                         </div>
                     )}
 
@@ -101,7 +101,10 @@ export default function RegisterPage() {
                                     type="text"
                                     required
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                        if (error) setError('');
+                                    }}
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
                                     placeholder="Alex Mercer"
                                 />
@@ -118,7 +121,10 @@ export default function RegisterPage() {
                                     type="email"
                                     required
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (error) setError('');
+                                    }}
                                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
                                     placeholder="alex@company.com"
                                 />
@@ -135,21 +141,28 @@ export default function RegisterPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (error) setError('');
+                                    }}
+                                    className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition text-sm"
                                     placeholder="••••••••"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer z-10"
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all cursor-pointer z-10 flex items-center justify-center ${
+                                        showPassword
+                                            ? 'text-indigo-300 bg-indigo-500/20 border border-indigo-500/30 shadow-sm shadow-indigo-500/25 ring-1 ring-indigo-500/30'
+                                            : 'text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 shadow-sm'
+                                    }`}
                                     title={showPassword ? 'Hide password' : 'Show password'}
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? (
-                                        <EyeOff className="w-4 h-4 text-indigo-400" />
+                                        <EyeOff className="w-4 h-4 text-indigo-300" />
                                     ) : (
-                                        <Eye className="w-4 h-4 text-slate-400" />
+                                        <Eye className="w-4 h-4 text-white" />
                                     )}
                                 </button>
                             </div>
