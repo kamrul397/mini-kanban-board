@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Board, User, apiFetch } from '@/lib/api';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Plus, Layout, LogOut, Users, Search, FolderKanban, Sparkles, ArrowUpRight, Edit2, Trash2, Settings, X, Info } from 'lucide-react';
+import { Plus, Layout, LogOut, Users, Search, FolderKanban, Sparkles, ArrowUpRight, Edit2, Trash2, Settings, X, Info, Shield, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -50,6 +50,7 @@ export default function BoardsPage() {
     });
 
     const [userDirectorySearch, setUserDirectorySearch] = useState('');
+    const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
     // TanStack Query: fetch and cache all registered users
     const { data: allUsers = [] } = useQuery<User[]>({
@@ -235,25 +236,32 @@ export default function BoardsPage() {
     };
 
     const handleUpdateMemberRole = async (memberId: string, newRole: 'EDITOR' | 'VIEWER') => {
-        if (!selectedBoardForMembers) return;
+        if (!selectedBoardForMembers || updatingMemberId === memberId) return;
+        setUpdatingMemberId(memberId);
+
+        // Optimistic update
+        setSelectedBoardForMembers((prev) => {
+            if (!prev || !prev.members) return prev;
+            return {
+                ...prev,
+                members: prev.members.map((m) =>
+                    m.id === memberId ? { ...m, role: newRole } : m
+                ),
+            };
+        });
+
         try {
             await apiFetch(`/boards/${selectedBoardForMembers.id}/members/${memberId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ role: newRole }),
             });
-            toast.success('Member role updated');
-            setSelectedBoardForMembers((prev) => {
-                if (!prev || !prev.members) return prev;
-                return {
-                    ...prev,
-                    members: prev.members.map((m) =>
-                        m.id === memberId ? { ...m, role: newRole } : m
-                    ),
-                };
-            });
-            fetchBoards();
+            toast.success(`Role updated to ${newRole === 'EDITOR' ? 'Editor' : 'Viewer'}`);
+            queryClient.invalidateQueries({ queryKey: ['boards'] });
         } catch (err: any) {
             toast.error(err.message || 'Failed to update member role');
+            fetchBoards();
+        } finally {
+            setUpdatingMemberId(null);
         }
     };
 
@@ -783,16 +791,36 @@ export default function BoardsPage() {
 
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {isOwner ? (
-                                                        <select
-                                                            value={m.role}
-                                                            onChange={(e) =>
-                                                                handleUpdateMemberRole(m.id, e.target.value as 'EDITOR' | 'VIEWER')
-                                                            }
-                                                            className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                                                        >
-                                                            <option value="EDITOR">Editor</option>
-                                                            <option value="VIEWER">Viewer</option>
-                                                        </select>
+                                                        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800">
+                                                            <button
+                                                                type="button"
+                                                                disabled={updatingMemberId === m.id}
+                                                                onClick={() => handleUpdateMemberRole(m.id, 'EDITOR')}
+                                                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                                                                    m.role === 'EDITOR'
+                                                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                                                }`}
+                                                                title={m.role === 'EDITOR' ? 'Active: Editor' : 'Click to make Editor'}
+                                                            >
+                                                                <Shield className="w-3 h-3 text-emerald-400" />
+                                                                <span>Editor</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={updatingMemberId === m.id}
+                                                                onClick={() => handleUpdateMemberRole(m.id, 'VIEWER')}
+                                                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                                                                    m.role === 'VIEWER'
+                                                                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+                                                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                                                }`}
+                                                                title={m.role === 'VIEWER' ? 'Active: Viewer' : 'Click to make Viewer'}
+                                                            >
+                                                                <Eye className="w-3 h-3 text-sky-400" />
+                                                                <span>Viewer</span>
+                                                            </button>
+                                                        </div>
                                                     ) : (
                                                         <span
                                                             className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${

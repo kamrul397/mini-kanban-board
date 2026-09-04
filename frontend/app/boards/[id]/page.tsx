@@ -30,10 +30,27 @@ import {
     Shield,
     Check,
     AlertCircle,
-    LogOut
+    LogOut,
+    Mail,
+    UserPlus
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+
+// Deterministic colorful avatar palette for realistic user display
+const getAvatarGradient = (str: string = '') => {
+    const gradients = [
+        'from-indigo-600 to-violet-600 text-white shadow-indigo-500/25',
+        'from-emerald-600 to-teal-600 text-white shadow-emerald-500/25',
+        'from-rose-600 to-pink-600 text-white shadow-rose-500/25',
+        'from-amber-600 to-orange-600 text-white shadow-amber-500/25',
+        'from-sky-600 to-blue-600 text-white shadow-sky-500/25',
+        'from-fuchsia-600 to-purple-600 text-white shadow-fuchsia-500/25',
+    ];
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
+    return gradients[Math.abs(hash) % gradients.length];
+};
 
 // Accent palettes for columns
 const COLUMN_ACCENTS = [
@@ -1218,68 +1235,77 @@ export default function BoardDetailPage() {
 
             {/* Modal: Share Board & Member Management */}
             {showShareModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-                    <div className="w-full max-w-md bg-slate-900/95 rounded-3xl p-6 md:p-7 border border-slate-800 shadow-2xl animate-modal max-h-[90vh] flex flex-col">
-                        <div className="flex justify-between items-center mb-1">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Users className="w-5 h-5 text-indigo-400" /> Share Board
-                            </h2>
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50">
+                    <div className="w-full max-w-lg bg-slate-900/95 rounded-3xl p-6 md:p-8 border border-slate-800 shadow-2xl animate-modal max-h-[92vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                    <Users className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-white tracking-tight">Invite Collaborators</h2>
+                                    <p className="text-[11px] text-slate-400">Add team members with Editor or Viewer privileges</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => setShowShareModal(false)}
-                                className="text-slate-500 hover:text-slate-300 transition cursor-pointer"
+                                className="p-2 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-800/60 transition cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mb-4">
-                            Select available team members to invite as an Editor or Viewer
-                        </p>
 
-                        <div className="overflow-y-auto pr-1 space-y-4 flex-1">
+                        <div className="overflow-y-auto custom-scrollbar pr-1 space-y-4 flex-1 mt-3">
                             {/* Search bar */}
                             <div className="relative">
-                                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                 <input
                                     type="text"
                                     value={userDirectorySearch}
                                     onChange={(e) => setUserDirectorySearch(e.target.value)}
-                                    placeholder="Search users by name or email..."
-                                    className="w-full pl-8.5 pr-7 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+                                    placeholder="Search directory by name or email..."
+                                    className="w-full pl-10 pr-8 py-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition shadow-inner"
                                 />
                                 {userDirectorySearch && (
                                     <button
                                         type="button"
                                         onClick={() => setUserDirectorySearch('')}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 )}
                             </div>
 
                             {/* Available Members List */}
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
-                                    <span>Available Users</span>
-                                    <span>{availableUsers.length}</span>
+                                <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold uppercase tracking-wider px-1">
+                                    <span>Registered Users</span>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                        {availableUsers.length} available
+                                    </span>
                                 </div>
 
-                                <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+                                {/* Scrolls when exceeding 10 items (approx 520px height) */}
+                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-2 pr-1.5">
                                     {availableUsers.length > 0 ? (
                                         availableUsers.map((u) => (
                                             <div
                                                 key={u.id}
-                                                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-indigo-500/40 transition gap-2"
+                                                className="group/user flex items-center justify-between p-2.5 px-3 rounded-2xl bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-indigo-500/40 transition-all duration-150 gap-3 shadow-sm hover:shadow-md hover:shadow-indigo-500/5"
                                             >
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(u.email)} flex items-center justify-center text-xs font-bold uppercase shrink-0 shadow-md ring-2 ring-slate-900`}>
                                                         {(u.name || u.email).charAt(0)}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-medium text-white truncate">
+                                                        <p className="text-xs font-semibold text-slate-100 group-hover/user:text-white transition truncate">
                                                             {u.name || u.email.split('@')[0]}
                                                         </p>
-                                                        <p className="text-[10px] text-slate-400 truncate">{u.email}</p>
+                                                        <p className="text-[11px] text-slate-400 group-hover/user:text-slate-300 transition truncate flex items-center gap-1 mt-0.5">
+                                                            <Mail className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                                                            <span>{u.email}</span>
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 shrink-0">
@@ -1287,51 +1313,62 @@ export default function BoardDetailPage() {
                                                         type="button"
                                                         disabled={shareSubmitting}
                                                         onClick={() => handleQuickInvite(u.email, 'EDITOR')}
-                                                        className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium transition cursor-pointer"
-                                                        title="Invite as Editor"
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/25 text-xs font-medium transition cursor-pointer active:scale-95 disabled:opacity-50 shadow-sm"
+                                                        title="Invite as Editor (can manage tasks & columns)"
                                                     >
-                                                        + Editor
+                                                        <Shield className="w-3 h-3 text-emerald-400" />
+                                                        <span>+ Editor</span>
                                                     </button>
                                                     <button
                                                         type="button"
                                                         disabled={shareSubmitting}
                                                         onClick={() => handleQuickInvite(u.email, 'VIEWER')}
-                                                        className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-medium transition cursor-pointer"
-                                                        title="Invite as Viewer"
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 hover:text-sky-200 border border-sky-500/25 text-xs font-medium transition cursor-pointer active:scale-95 disabled:opacity-50 shadow-sm"
+                                                        title="Invite as Viewer (read-only)"
                                                     >
-                                                        + Viewer
+                                                        <Eye className="w-3 h-3 text-sky-400" />
+                                                        <span>+ Viewer</span>
                                                     </button>
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
-                                        <p className="text-xs text-slate-500 text-center py-6 italic">
-                                            {userDirectorySearch
-                                                ? 'No users match your search.'
-                                                : 'All registered users are already members of this board!'}
-                                        </p>
+                                        <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/40">
+                                            <Users className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-60" />
+                                            <p className="text-xs text-slate-400 font-medium">
+                                                {userDirectorySearch
+                                                    ? 'No registered users match your search.'
+                                                    : 'All registered users are already collaborators on this board!'}
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Direct Email Fallback */}
-                            <div className="pt-3 border-t border-slate-800/80">
-                                <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider mb-2">
-                                    Or invite by direct email:
-                                </p>
+                            <div className="pt-4 border-t border-slate-800/80">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                        <UserPlus className="w-3.5 h-3.5 text-indigo-400" /> Direct Invite
+                                    </p>
+                                    <span className="text-[10px] text-slate-500">For colleagues by email</span>
+                                </div>
                                 <form onSubmit={handleShareBoard} className="flex gap-2">
-                                    <input
-                                        type="email"
-                                        required
-                                        value={shareEmail}
-                                        onChange={(e) => setShareEmail(e.target.value)}
-                                        className="flex-1 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
-                                        placeholder="colleague@example.com"
-                                    />
+                                    <div className="relative flex-1">
+                                        <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="email"
+                                            required
+                                            value={shareEmail}
+                                            onChange={(e) => setShareEmail(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
+                                            placeholder="colleague@example.com"
+                                        />
+                                    </div>
                                     <select
                                         value={shareRole}
                                         onChange={(e) => setShareRole(e.target.value as 'EDITOR' | 'VIEWER')}
-                                        className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition"
+                                        className="px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition cursor-pointer"
                                     >
                                         <option value="EDITOR">Editor</option>
                                         <option value="VIEWER">Viewer</option>
@@ -1339,19 +1376,19 @@ export default function BoardDetailPage() {
                                     <button
                                         type="submit"
                                         disabled={shareSubmitting}
-                                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0"
+                                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0 active:scale-95"
                                     >
-                                        {shareSubmitting ? '...' : 'Invite'}
+                                        {shareSubmitting ? 'Inviting...' : 'Invite'}
                                     </button>
                                 </form>
                             </div>
 
                             {/* Link to Board Details */}
-                            <div className="pt-3 border-t border-slate-800/60 text-center">
+                            <div className="pt-2 text-center">
                                 <Link
                                     href={`/boards/${id}/details`}
                                     onClick={() => setShowShareModal(false)}
-                                    className="text-[11px] text-indigo-400 hover:text-indigo-300 transition hover:underline"
+                                    className="text-[11px] text-indigo-400 hover:text-indigo-300 transition hover:underline inline-flex items-center gap-1"
                                 >
                                     Manage existing collaborators in Board Details →
                                 </Link>

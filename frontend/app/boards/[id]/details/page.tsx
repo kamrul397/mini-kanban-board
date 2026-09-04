@@ -24,9 +24,26 @@ import {
     Check,
     X,
     Eye,
-    Kanban
+    Kanban,
+    Mail,
+    UserPlus
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Deterministic colorful avatar palette for realistic user display
+const getAvatarGradient = (str: string = '') => {
+    const gradients = [
+        'from-indigo-600 to-violet-600 text-white shadow-indigo-500/25',
+        'from-emerald-600 to-teal-600 text-white shadow-emerald-500/25',
+        'from-rose-600 to-pink-600 text-white shadow-rose-500/25',
+        'from-amber-600 to-orange-600 text-white shadow-amber-500/25',
+        'from-sky-600 to-blue-600 text-white shadow-sky-500/25',
+        'from-fuchsia-600 to-purple-600 text-white shadow-fuchsia-500/25',
+    ];
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
+    return gradients[Math.abs(hash) % gradients.length];
+};
 
 export default function BoardDetailsPage() {
     const { id } = useParams<{ id: string }>();
@@ -62,6 +79,7 @@ export default function BoardDetailsPage() {
     const [shareRole, setShareRole] = useState<'EDITOR' | 'VIEWER'>('EDITOR');
     const [shareSubmitting, setShareSubmitting] = useState(false);
     const [userDirectorySearch, setUserDirectorySearch] = useState('');
+    const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
     // Delete confirmation state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -77,9 +95,7 @@ export default function BoardDetailsPage() {
 
     // Role identification
     const isOwner = board?.ownerId === user?.id;
-    const currentMember = board?.members?.find((m) => m.userId === user?.id);
-    const isEditor = !isOwner && currentMember?.role === 'EDITOR';
-    const isViewer = !isOwner && currentMember?.role === 'VIEWER';
+    const isEditor = board?.members?.some((m) => m.userId === user?.id && m.role === 'EDITOR');
     const canShare = isOwner || isEditor;
 
     // Filter available users who can be invited (not owner, not already a member)
@@ -150,13 +166,13 @@ export default function BoardDetailsPage() {
                     body: JSON.stringify({ email: shareEmail.trim(), role: shareRole }),
                 }
             );
-            toast.success(res.message || `Board shared with ${shareEmail}!`);
+            toast.success(res.message || `Invited ${shareEmail}!`);
             setShareEmail('');
             queryClient.invalidateQueries({ queryKey: ['board', id] });
             queryClient.invalidateQueries({ queryKey: ['boards'] });
             fetchBoard();
         } catch (err: any) {
-            toast.error(err.message || 'Failed to share board');
+            toast.error(err.message || 'Failed to invite user');
         } finally {
             setShareSubmitting(false);
         }
@@ -185,36 +201,82 @@ export default function BoardDetailsPage() {
     };
 
     const handleUpdateRole = async (memberId: string, newRole: 'EDITOR' | 'VIEWER') => {
-        if (!isOwner) return;
+        if (!isOwner || updatingMemberId === memberId) return;
+        setUpdatingMemberId(memberId);
+
+        // 1. Snapshot previous state for instant rollback if server fails
+        const previousBoard = queryClient.getQueryData<Board>(['board', id]);
+
+        // 2. Optimistically update local query cache (0ms instant visual change)
+        queryClient.setQueryData<Board>(['board', id], (old) => {
+            if (!old || !old.members) return old;
+            return {
+                ...old,
+                members: old.members.map((m) =>
+                    m.id === memberId ? { ...m, role: newRole } : m
+                ),
+            };
+        });
+
+        toast.success(`Role updated to ${newRole === 'EDITOR' ? 'Editor' : 'Viewer'}`);
+
+        // 3. Persist in background
         try {
             await apiFetch(`/boards/${id}/members/${memberId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ role: newRole }),
             });
-            toast.success('Collaborator role updated');
             queryClient.invalidateQueries({ queryKey: ['board', id] });
-            fetchBoard();
+            queryClient.invalidateQueries({ queryKey: ['boards'] });
         } catch (err: any) {
+            // Revert immediately if server rejects
+            if (previousBoard) {
+                queryClient.setQueryData(['board', id], previousBoard);
+            }
             toast.error(err.message || 'Failed to update member role');
+        } finally {
+            setUpdatingMemberId(null);
         }
     };
 
     const handleRemoveOrLeave = async (memberId: string, identifier: string) => {
         const isSelf = board?.members?.find((m) => m.id === memberId)?.userId === user?.id;
+        const previousBoard = queryClient.getQueryData<Board>(['board', id]);
+
+        if (isSelf) {
+            try {
+                await apiFetch(`/boards/${id}/members/${memberId}`, {
+                    method: 'DELETE',
+                });
+                toast.success('You have left the board');
+                queryClient.invalidateQueries({ queryKey: ['boards'] });
+                router.push('/boards');
+            } catch (err: any) {
+                toast.error(err.message || 'Failed to leave board');
+            }
+            return;
+        }
+
+        // Optimistically remove from list immediately (0ms)
+        queryClient.setQueryData<Board>(['board', id], (old) => {
+            if (!old || !old.members) return old;
+            return {
+                ...old,
+                members: old.members.filter((m) => m.id !== memberId),
+            };
+        });
+        toast.success(`Removed ${identifier} from board`);
+
         try {
             await apiFetch(`/boards/${id}/members/${memberId}`, {
                 method: 'DELETE',
             });
-            if (isSelf) {
-                toast.success('You have left the board');
-                queryClient.invalidateQueries({ queryKey: ['boards'] });
-                router.push('/boards');
-                return;
-            }
-            toast.success(`Removed ${identifier} from board`);
             queryClient.invalidateQueries({ queryKey: ['board', id] });
-            fetchBoard();
+            queryClient.invalidateQueries({ queryKey: ['boards'] });
         } catch (err: any) {
+            if (previousBoard) {
+                queryClient.setQueryData(['board', id], previousBoard);
+            }
             toast.error(err.message || 'Failed to remove member');
         }
     };
@@ -455,22 +517,25 @@ export default function BoardDetailsPage() {
                                     )}
                                 </div>
 
-                                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-2 pr-1.5">
                                     {availableUsers.length > 0 ? (
                                         availableUsers.map((u) => (
                                             <div
                                                 key={u.id}
-                                                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/60 hover:border-indigo-500/40 transition gap-2"
+                                                className="group/user flex items-center justify-between p-2.5 px-3.5 rounded-2xl bg-slate-950/70 hover:bg-slate-850 border border-slate-800/80 hover:border-indigo-500/40 transition-all duration-150 gap-3 shadow-sm hover:shadow-md hover:shadow-indigo-500/5"
                                             >
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 shadow-sm">
+                                                    <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(u.email)} flex items-center justify-center text-xs font-bold uppercase shrink-0 shadow-md ring-2 ring-slate-900`}>
                                                         {(u.name || u.email).charAt(0)}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-medium text-white truncate">
+                                                        <p className="text-xs font-semibold text-slate-100 group-hover/user:text-white transition truncate">
                                                             {u.name || u.email.split('@')[0]}
                                                         </p>
-                                                        <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
+                                                        <p className="text-[11px] text-slate-400 group-hover/user:text-slate-300 transition truncate flex items-center gap-1 mt-0.5">
+                                                            <Mail className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                                                            <span>{u.email}</span>
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
@@ -478,51 +543,62 @@ export default function BoardDetailsPage() {
                                                         type="button"
                                                         disabled={shareSubmitting}
                                                         onClick={() => handleQuickInvite(u.email, 'EDITOR')}
-                                                        className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition cursor-pointer"
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/25 text-xs font-medium transition cursor-pointer active:scale-95 disabled:opacity-50 shadow-sm"
                                                         title="Invite as Editor"
                                                     >
-                                                        + Editor
+                                                        <Shield className="w-3 h-3 text-emerald-400" />
+                                                        <span>+ Editor</span>
                                                     </button>
                                                     <button
                                                         type="button"
                                                         disabled={shareSubmitting}
                                                         onClick={() => handleQuickInvite(u.email, 'VIEWER')}
-                                                        className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-medium transition cursor-pointer"
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 hover:text-sky-200 border border-sky-500/25 text-xs font-medium transition cursor-pointer active:scale-95 disabled:opacity-50 shadow-sm"
                                                         title="Invite as Viewer"
                                                     >
-                                                        + Viewer
+                                                        <Eye className="w-3 h-3 text-sky-400" />
+                                                        <span>+ Viewer</span>
                                                     </button>
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
-                                        <p className="text-xs text-slate-500 text-center py-3 italic">
-                                            {userDirectorySearch
-                                                ? 'No registered users match your search.'
-                                                : 'All registered users are already collaborators on this board!'}
-                                        </p>
+                                        <div className="p-8 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/40">
+                                            <Users className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-60" />
+                                            <p className="text-xs text-slate-400 font-medium">
+                                                {userDirectorySearch
+                                                    ? 'No registered users match your search.'
+                                                    : 'All registered users are already collaborators on this board!'}
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Direct Email Fallback */}
-                            <div className="pt-3 border-t border-slate-800/80">
-                                <p className="text-[11px] uppercase font-semibold text-slate-400 tracking-wider mb-2">
-                                    Or invite by direct email:
-                                </p>
+                            <div className="pt-4 border-t border-slate-800/80">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                        <UserPlus className="w-3.5 h-3.5 text-indigo-400" /> Direct Invite
+                                    </p>
+                                    <span className="text-[10px] text-slate-500">For colleagues by email</span>
+                                </div>
                                 <form onSubmit={handleDirectInvite} className="flex flex-col sm:flex-row gap-2">
-                                    <input
-                                        type="email"
-                                        required
-                                        value={shareEmail}
-                                        onChange={(e) => setShareEmail(e.target.value)}
-                                        className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
-                                        placeholder="colleague@example.com"
-                                    />
+                                    <div className="relative flex-1">
+                                        <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="email"
+                                            required
+                                            value={shareEmail}
+                                            onChange={(e) => setShareEmail(e.target.value)}
+                                            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs transition"
+                                            placeholder="colleague@example.com"
+                                        />
+                                    </div>
                                     <select
                                         value={shareRole}
                                         onChange={(e) => setShareRole(e.target.value as 'EDITOR' | 'VIEWER')}
-                                        className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition"
+                                        className="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 text-xs transition cursor-pointer"
                                     >
                                         <option value="EDITOR">Editor (Can manage tasks & columns)</option>
                                         <option value="VIEWER">Viewer (Read-only access)</option>
@@ -530,7 +606,7 @@ export default function BoardDetailsPage() {
                                     <button
                                         type="submit"
                                         disabled={shareSubmitting}
-                                        className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0"
+                                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-md shadow-indigo-600/20 cursor-pointer shrink-0 active:scale-95"
                                     >
                                         {shareSubmitting ? 'Inviting...' : 'Invite'}
                                     </button>
@@ -545,11 +621,11 @@ export default function BoardDetailsPage() {
                             Current Collaborators
                         </h3>
 
-                        <div className="space-y-2">
+                        <div className="max-h-[500px] overflow-y-auto custom-scrollbar space-y-2 pr-1.5">
                             {/* Board Owner */}
-                            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/80">
+                            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800/80 shadow-sm">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 shadow-sm">
+                                    <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(board.owner?.email || '')} flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 shadow-md ring-2 ring-slate-900`}>
                                         {(board.owner?.name || board.owner?.email || 'O').charAt(0)}
                                     </div>
                                     <div className="min-w-0">
@@ -557,7 +633,10 @@ export default function BoardDetailsPage() {
                                             {board.owner?.name || board.owner?.email?.split('@')[0]}
                                             {board.ownerId === user?.id && <span className="text-slate-400 font-normal ml-1.5">(You)</span>}
                                         </p>
-                                        <p className="text-[11px] text-slate-400 truncate">{board.owner?.email}</p>
+                                        <p className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                            <Mail className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                                            <span>{board.owner?.email}</span>
+                                        </p>
                                     </div>
                                 </div>
                                 <span className="text-[11px] px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold uppercase tracking-wider">
@@ -571,10 +650,10 @@ export default function BoardDetailsPage() {
                                 return (
                                     <div
                                         key={m.id}
-                                        className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/80 hover:border-slate-700 transition gap-3"
+                                        className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/50 border border-slate-800/80 hover:border-slate-700 transition gap-3 shadow-sm"
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 uppercase shrink-0">
+                                            <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(m.user.email)} flex items-center justify-center text-xs font-bold text-white uppercase shrink-0 shadow-md ring-2 ring-slate-900`}>
                                                 {(m.user.name || m.user.email).charAt(0)}
                                             </div>
                                             <div className="min-w-0">
@@ -582,22 +661,45 @@ export default function BoardDetailsPage() {
                                                     {m.user.name || m.user.email.split('@')[0]}
                                                     {isCurrentUser && <span className="text-slate-400 font-normal ml-1.5">(You)</span>}
                                                 </p>
-                                                <p className="text-[11px] text-slate-400 truncate">{m.user.email}</p>
+                                                <p className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                                    <Mail className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                                                    <span>{m.user.email}</span>
+                                                </p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2.5 shrink-0">
                                             {isOwner ? (
-                                                <select
-                                                    value={m.role}
-                                                    onChange={(e) =>
-                                                        handleUpdateRole(m.id, e.target.value as 'EDITOR' | 'VIEWER')
-                                                    }
-                                                    className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                                                >
-                                                    <option value="EDITOR">Editor</option>
-                                                    <option value="VIEWER">Viewer</option>
-                                                </select>
+                                                <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800">
+                                                    <button
+                                                        type="button"
+                                                        disabled={updatingMemberId === m.id}
+                                                        onClick={() => handleUpdateRole(m.id, 'EDITOR')}
+                                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                                                            m.role === 'EDITOR'
+                                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                                        }`}
+                                                        title={m.role === 'EDITOR' ? 'Active: Editor' : 'Click to change to Editor'}
+                                                    >
+                                                        <Shield className="w-3 h-3 text-emerald-400" />
+                                                        <span>Editor</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={updatingMemberId === m.id}
+                                                        onClick={() => handleUpdateRole(m.id, 'VIEWER')}
+                                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                                                            m.role === 'VIEWER'
+                                                                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+                                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                                        }`}
+                                                        title={m.role === 'VIEWER' ? 'Active: Viewer' : 'Click to change to Viewer'}
+                                                    >
+                                                        <Eye className="w-3 h-3 text-sky-400" />
+                                                        <span>Viewer</span>
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <span
                                                     className={`text-[11px] px-3 py-1 rounded-full font-medium ${
