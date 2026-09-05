@@ -6,7 +6,37 @@ Built with **Next.js 16 (React 19)**, **Node.js & Express with TypeScript**, **P
 
 ---
 
+## ⚡ Quick Run Project (60-Second Setup for Recruiters)
+
+You can spin up and test the full application immediately with a single command:
+
+```bash
+# 1. Clone & enter repository
+git clone https://github.com/kamrul397/mini-kanban-board.git
+cd mini-kanban-board
+
+# 2. Launch full-stack platform (Frontend + Backend + PostgreSQL)
+docker compose up --build
+```
+
+### 🌐 Live URLs & Instant Demo Login
+
+* **Frontend Web App**: [http://localhost:3000](http://localhost:3000)
+* **Backend REST API**: [http://localhost:4000/api](http://localhost:4000/api)
+* **API Health Check**: [http://localhost:4000/api/health](http://localhost:4000/api/health)
+
+| Quick Evaluation Login | Credentials |
+|---|---|
+| **Email** | `kamal123@gmail.com` |
+| **Password** | `Piyel123` |
+
+> 💡 **Ready to Test**: This account is pre-populated with active boards, workflow columns, tasks, and members so you can test drag-and-drop card movement, column creation/deletion, and board sharing immediately without any manual setup!
+
+---
+
 ## Table of Contents
+
+* [⚡ Quick Run Project](#-quick-run-project-60-second-setup-for-recruiters)
 
 1. [Project Overview & Philosophy](#project-overview--philosophy)
 2. [The 3 Core Pillars of Use](#the-3-core-pillars-of-use)
