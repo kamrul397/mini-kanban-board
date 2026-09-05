@@ -19,11 +19,14 @@ cd mini-kanban-board
 docker compose up --build
 ```
 
-### 🌐 Live URLs & Instant Demo Login
+### 🌐 Live Production Deployment (Try It Live!)
 
-* **Frontend Web App**: [http://localhost:3000](http://localhost:3000)
-* **Backend REST API**: [http://localhost:4000/api](http://localhost:4000/api)
-* **API Health Check**: [http://localhost:4000/api/health](http://localhost:4000/api/health)
+The application is deployed and publicly accessible online:
+
+* 🚀 **Live Frontend Web App (Vercel)**: [https://mini-kanban-board-5dl8ez8ay-kamrul-islams-projects-c8a75883.vercel.app](https://mini-kanban-board-5dl8ez8ay-kamrul-islams-projects-c8a75883.vercel.app/login)
+* ⚙️ **Live Backend REST API (Render)**: [https://mini-kanban-board-6ble.onrender.com/api](https://mini-kanban-board-6ble.onrender.com/api)
+* 🩺 **Live API Health Check**: [https://mini-kanban-board-6ble.onrender.com/api/health](https://mini-kanban-board-6ble.onrender.com/api/health)
+* 💻 **Local Docker URL (if running locally)**: [http://localhost:3000](http://localhost:3000)
 
 | Quick Evaluation Login | Credentials |
 |---|---|
