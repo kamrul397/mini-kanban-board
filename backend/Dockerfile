@@ -1,4 +1,4 @@
-﻿FROM node:20-alpine AS base
+FROM node:20-alpine AS base
 
 WORKDIR /app
 
@@ -21,4 +21,4 @@ RUN npm run build
 EXPOSE 4000
 
 # Wait for Postgres and push migrations, then start server
-CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node dist/src/index.js"]

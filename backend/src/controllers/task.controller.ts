@@ -17,8 +17,13 @@ const updateTaskSchema = z.object({
 
 const moveTaskSchema = z.object({
     targetColumnId: z.string().uuid('Invalid target column ID'),
-    // The client can either provide target order directly OR prev/next task IDs to calculate midpoint
+    // The client can provide:
+    // 1. targetOrder directly (float)
+    // 2. positionIndex or position (0-based index in target column)
+    // 3. prevTaskId/nextTaskId to calculate midpoint
     targetOrder: z.number().optional(),
+    positionIndex: z.number().int().min(0).optional(),
+    position: z.number().int().min(0).optional(),
     prevTaskId: z.string().uuid().optional().nullable(),
     nextTaskId: z.string().uuid().optional().nullable(),
 });
@@ -153,7 +158,7 @@ export const moveTask = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.userId;
         const taskId = req.params.id as string;
-        const { targetColumnId, targetOrder, prevTaskId, nextTaskId } = moveTaskSchema.parse(req.body);
+        const { targetColumnId, targetOrder, positionIndex, position, prevTaskId, nextTaskId } = moveTaskSchema.parse(req.body);
 
         // Fetch the current task and its column
         const currentTask = await prisma.task.findUnique({
@@ -191,7 +196,37 @@ export const moveTask = async (req: AuthRequest, res: Response) => {
         if (typeof targetOrder === 'number') {
             newOrder = targetOrder;
         }
-        // Strategy B: Calculate order based on neighboring items (prevTaskId & nextTaskId)
+        // Strategy B: If client passed a specific position index (0-based)
+        else if (positionIndex !== undefined || position !== undefined) {
+            const idx = positionIndex !== undefined ? positionIndex : position!;
+
+            // Fetch existing tasks in target column (excluding the task being moved)
+            const targetTasks = await prisma.task.findMany({
+                where: {
+                    columnId: targetColumnId,
+                    id: { not: taskId },
+                },
+                orderBy: { order: 'asc' },
+                select: { id: true, order: true },
+            });
+
+            if (targetTasks.length === 0) {
+                // Column is empty
+                newOrder = 1000;
+            } else if (idx <= 0) {
+                // Placed at the very top (index 0)
+                newOrder = targetTasks[0].order / 2;
+            } else if (idx >= targetTasks.length) {
+                // Placed at or beyond the very bottom
+                newOrder = targetTasks[targetTasks.length - 1].order + 1000;
+            } else {
+                // Placed between index - 1 and index
+                const prevOrder = targetTasks[idx - 1].order;
+                const nextOrder = targetTasks[idx].order;
+                newOrder = (prevOrder + nextOrder) / 2;
+            }
+        }
+        // Strategy C: Calculate order based on neighboring items (prevTaskId & nextTaskId)
         else {
             let prevOrder: number | null = null;
             let nextOrder: number | null = null;

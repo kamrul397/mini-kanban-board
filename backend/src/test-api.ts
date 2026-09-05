@@ -138,8 +138,22 @@ async function testBackend() {
     if (!moveRes2.ok) throw new Error(`Reorder failed: ${JSON.stringify(moveData2)}`);
     console.log(`   ✅ Reordered! Task 3 new order: ${moveData2.task.order} (Task 2 order is ${task2.order})\n`);
 
-    // 7. Fetch the Full Board to confirm final structure
-    console.log('7️⃣  Fetching full board state to verify structure...');
+    // 7. Test Moving using positionIndex: Move Task 2 to "In Progress" at positionIndex: 0
+    console.log('7️⃣  Moving "Task 2" to "In Progress" at positionIndex: 0 (top of column)...');
+    const moveRes3 = await fetch(`${BASE_URL}/tasks/${task2.id}/move`, {
+        method: 'PATCH',
+        headers: authHeaders,
+        body: JSON.stringify({
+            targetColumnId: inProgressCol.id,
+            positionIndex: 0,
+        }),
+    });
+    const moveData3 = await moveRes3.json();
+    if (!moveRes3.ok) throw new Error(`Move by positionIndex failed: ${JSON.stringify(moveData3)}`);
+    console.log(`   ✅ Moved by positionIndex! Task 2 new order: ${moveData3.task.order}\n`);
+
+    // 8. Fetch the Full Board to confirm final structure
+    console.log('8️⃣  Fetching full board state to verify structure...');
     const fullBoardRes = await fetch(`${BASE_URL}/boards/${board.id}`, {
         method: 'GET',
         headers: authHeaders,

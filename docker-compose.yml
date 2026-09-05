@@ -1,4 +1,4 @@
-﻿services:
+services:
   postgres:
     image: postgres:16-alpine
     container_name: mini-kanban-postgres
@@ -25,13 +25,10 @@
     restart: unless-stopped
     environment:
       PORT: 4000
-      DATABASE_URL: "postgresql://kanban:kanban_password@postgres:5432/kanban_db?schema=public"
-      JWT_SECRET: "your-super-secret-kanban-jwt-key"
+      DATABASE_URL: "postgresql://neondb_owner:npg_ADeVP8lr6GXm@ep-round-mountain-b3hn9hqc-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+      JWT_SECRET: "your-super-secret-kanban-key"
     ports:
       - "4000:4000"
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   frontend:
     build:
