@@ -68,6 +68,7 @@ Modern project management tools are frequently burdened with bloated configurati
 * **Granular Visibility**: Differentiate between who works on tasks and who simply monitors deliverables.
 * **Instant Feedback**: 0ms optimistic UI updates backed by immediate background persistence and rollback resilience.
 * **Rock-Solid Ordering**: Mathematical fractional indexing algorithm preventing task position collisions and race conditions.
+* **📱 100% Mobile Responsive & Touch-Optimized**: Native-feel collapsible accordion stacks on mobile with zero horizontal scrollbars, 1-tap quick stage movements (`Move: [Dropdown]` and `→` advance buttons), while keeping the multi-column auto-grid on desktop displays.
 
 ---
 
@@ -141,6 +142,13 @@ Mini Kanban is tailored for three distinct interaction paradigms:
 * Instant client-side search filters boards and task cards across titles and descriptions with zero page reloads.
 * TanStack Query manages cache invalidation and optimistic mutations for instantaneous UI responsiveness.
 
+### Step 05: 100% Mobile Responsive Workflow (Collapsible Accordion Stacks)
+* **Zero Horizontal Scrolling**: Eliminates awkward side-scrolling on phones and narrow screens by presenting stages in a clean vertical accordion layout.
+* **1-Tap Quick Advance (`→`)**: Instantly advance tasks across stages (e.g. *Backlog* → *In Progress* → *Done*) without needing tedious multi-finger drag gestures.
+* **Direct Stage Switcher (`Move: [Dropdown]`)**: Direct stage selector on every card with automatic target accordion expansion.
+* **Multi-Stage Expansion**: Tap any stage to expand/collapse, or use "Expand All / Collapse All" to inspect multiple stages simultaneously with active drag-and-drop.
+* **Desktop Auto-Grid Untouched**: On desktop and tablet screens (`md:` ≥ 768px), the layout seamlessly expands to the multi-column side-by-side auto-grid.
+
 ---
 
 ## Technical Architecture & Stack
@@ -175,6 +183,7 @@ Mini Kanban is tailored for three distinct interaction paradigms:
 | **Frontend** | **Next.js 16 (App Router)** | Modern server/client component model, route handlers, optimized rendering. |
 | **Frontend** | **React 19** | Concurrent UI rendering with hooks and optimistic UI patterns. |
 | **Frontend** | **Tailwind CSS** | Dark glassmorphism aesthetics, responsive layouts, and micro-interactions. |
+| **Frontend** | **Responsive Design** | Custom mobile collapsible accordion stacks, zero horizontal scrollbars, and touch-optimized controls. |
 | **Frontend** | **@hello-pangea/dnd** | Drag-and-drop sensor toolkit (fully compatible with React 19 and mobile). |
 | **Frontend** | **TanStack Query (v5)** | Client caching, automatic cache invalidation, and optimistic state synchronization. |
 | **Frontend** | **Sonner** | Clean toast notifications replacing intrusive browser alerts. |

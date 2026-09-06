@@ -35,7 +35,9 @@ import {
     UserPlus,
     ExternalLink,
     CheckCircle2,
-    Columns3
+    Columns3,
+    ChevronDown,
+    ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -72,6 +74,24 @@ export default function BoardDetailPage() {
     const [columns, setColumns] = useState<Column[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    
+    // Mobile Accordion state: track which columns are expanded (default: first column open, others collapsible)
+    const [expandedMobileCols, setExpandedMobileCols] = useState<Record<string, boolean>>({});
+
+    const isColExpanded = (colId: string, idx: number) => {
+        if (expandedMobileCols[colId] !== undefined) {
+            return expandedMobileCols[colId];
+        }
+        // Default: first column is open on mobile
+        return idx === 0;
+    };
+
+    const toggleColExpanded = (colId: string, idx: number) => {
+        setExpandedMobileCols((prev) => ({
+            ...prev,
+            [colId]: !isColExpanded(colId, idx),
+        }));
+    };
 
     // Modals state
     const [showShareModal, setShowShareModal] = useState(false);
@@ -280,6 +300,52 @@ export default function BoardDetailPage() {
             queryClient.invalidateQueries({ queryKey: ['board', id] });
         } catch (err: any) {
             toast.error(err.message || 'Failed to move task. Reverting changes...');
+            fetchBoard();
+        }
+    };
+
+    // Direct Move for mobile switcher & quick stage selection
+    const handleMoveTaskDirect = async (taskId: string, targetColumnId: string) => {
+        if (isViewer) return;
+        const sourceCol = columns.find((c) => c.tasks.some((t) => t.id === taskId));
+        const destCol = columns.find((c) => c.id === targetColumnId);
+        if (!sourceCol || !destCol || sourceCol.id === destCol.id) return;
+
+        const taskToMove = sourceCol.tasks.find((t) => t.id === taskId);
+        if (!taskToMove) return;
+
+        // 1. Optimistically update columns state
+        const previousColumns = [...columns];
+        const newColumns = columns.map((c) => {
+            if (c.id === sourceCol.id) {
+                return { ...c, tasks: c.tasks.filter((t) => t.id !== taskId) };
+            }
+            if (c.id === destCol.id) {
+                return { ...c, tasks: [...c.tasks, { ...taskToMove, columnId: targetColumnId }] };
+            }
+            return c;
+        });
+        setColumns(newColumns);
+        // Automatically expand destination column accordion on mobile so the task is visible
+        setExpandedMobileCols((prev) => ({
+            ...prev,
+            [targetColumnId]: true,
+        }));
+        toast.success(`Task moved to "${destCol.title}"`);
+
+        // 2. Persist to API
+        try {
+            await apiFetch(`/tasks/${taskId}/move`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    targetColumnId,
+                    positionIndex: destCol.tasks.length,
+                }),
+            });
+            queryClient.invalidateQueries({ queryKey: ['board', id] });
+        } catch (err: any) {
+            setColumns(previousColumns);
+            toast.error(err.message || 'Failed to move task');
             fetchBoard();
         }
     };
@@ -768,20 +834,65 @@ export default function BoardDetailPage() {
                 </div>
             )}
 
-            {/* Kanban Columns Canvas - Responsive: Smooth horizontal swipe on mobile, auto-grid on desktop */}
-            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-auto overflow-y-hidden flex flex-col">
+            {/* Kanban Columns Canvas - Option 2: Mobile Collapsible Vertical Stacks (Accordion) + Desktop Multi-Column Grid */}
+            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden md:overflow-x-auto overflow-y-auto md:overflow-y-hidden flex flex-col min-h-0">
+                {/* Mobile Accordion Header Controls (< md screens only) */}
+                {columns.length > 0 && (
+                    <div className="flex md:hidden items-center justify-between px-1 pb-3 text-xs text-slate-400 shrink-0">
+                        <div className="flex items-center gap-2 font-medium text-slate-300">
+                            <Columns3 className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Workflow Stages ({columns.length})</span>
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const allOpen = columns.every((c, i) => isColExpanded(c.id, i));
+                                    const nextState: Record<string, boolean> = {};
+                                    columns.forEach((c) => { nextState[c.id] = !allOpen; });
+                                    setExpandedMobileCols(nextState);
+                                }}
+                                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer"
+                            >
+                                {columns.every((c, i) => isColExpanded(c.id, i)) ? 'Collapse All' : 'Expand All'}
+                            </button>
+                            {!isViewer && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddColumnModal(true)}
+                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition cursor-pointer"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Stage
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="flex md:grid md:grid-flow-col md:auto-cols-fr gap-3.5 sm:gap-4 md:gap-5 h-full items-start overflow-x-auto md:overflow-hidden pb-4 md:pb-0">
+                    <div className="flex flex-col md:grid md:grid-flow-col md:auto-cols-fr gap-3.5 sm:gap-4 md:gap-5 h-full items-start pb-6 md:pb-0">
                         {filteredColumns.map((column, colIdx) => {
                             const accent = COLUMN_ACCENTS[colIdx % COLUMN_ACCENTS.length];
+                            const isOpen = isColExpanded(column.id, colIdx);
                             return (
                                 <div
                                     key={column.id}
-                                    className="w-[82vw] sm:w-[320px] shrink-0 md:w-auto md:shrink md:flex-1 md:min-w-0 max-h-[calc(100vh-140px)] rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg"
+                                    className="w-full md:w-auto md:shrink md:flex-1 md:min-w-0 md:max-h-[calc(100vh-140px)] rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg transition-all duration-200"
                                 >
-                                    {/* Column Header */}
-                                    <div className="pb-3 flex items-center justify-between border-b border-slate-800 shrink-0">
+                                    {/* Column Header (Clickable Accordion on Mobile, static on Desktop) */}
+                                    <div
+                                        onClick={() => toggleColExpanded(column.id, colIdx)}
+                                        className="pb-3 flex items-center justify-between border-b border-slate-800 shrink-0 cursor-pointer md:cursor-default select-none"
+                                    >
                                         <div className="flex items-center gap-2 min-w-0">
+                                            {/* Accordion Chevron: Mobile Only */}
+                                            <span className="md:hidden text-slate-400 shrink-0">
+                                                {isOpen ? (
+                                                    <ChevronDown className="w-4 h-4 text-indigo-400" />
+                                                ) : (
+                                                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                                                )}
+                                            </span>
                                             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${accent.dot}`} />
                                             <h3 className="font-semibold text-white text-sm truncate">{column.title}</h3>
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono shrink-0">
@@ -789,7 +900,7 @@ export default function BoardDetailPage() {
                                             </span>
                                         </div>
                                         {!isViewer && (
-                                            <div className="flex items-center gap-1 shrink-0">
+                                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => setNewTaskColumnId(column.id)}
                                                     className="p-1 rounded text-slate-400 hover:text-white cursor-pointer"
@@ -808,13 +919,14 @@ export default function BoardDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Droppable Task List with Vertical Scrolling */}
-                                    <Droppable droppableId={column.id} isDropDisabled={isViewer}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                                className={`py-3 flex-1 overflow-y-auto flex flex-col gap-2.5 min-h-[140px] pr-1 ${snapshot.isDraggingOver ? 'bg-slate-800/40' : ''
+                                    {/* Droppable Task List: Collapsible on Mobile, always flex-1 on Desktop */}
+                                    <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+                                        <Droppable droppableId={column.id} isDropDisabled={isViewer || (mounted && typeof window !== 'undefined' && window.innerWidth < 768 && !isOpen)}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                className={`py-3 flex-1 overflow-y-auto flex flex-col gap-2.5 min-h-[140px] pr-1 [scrollbar-width:thin] ${snapshot.isDraggingOver ? 'bg-slate-800/40' : ''
                                                     }`}
                                             >
                                                 {column.tasks.length === 0 && !snapshot.isDraggingOver && (
@@ -896,18 +1008,78 @@ export default function BoardDetailPage() {
                                                                     </p>
                                                                 )}
 
-                                                                <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
+                                                                {/* Desktop Date Display (Untouched) */}
+                                                                <div className="hidden md:flex items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-800/60 text-[10px] text-slate-500">
                                                                     <Clock className="w-3 h-3" />
                                                                     <span>{formatTaskDate(task.createdAt)}</span>
+                                                                </div>
+
+                                                                {/* Mobile Task Footer: Date + Move to Stage selector + Quick Next button */}
+                                                                <div className="flex md:hidden items-center justify-between gap-2 mt-2.5 pt-2 border-t border-slate-800/60 text-[10px]">
+                                                                    <div className="flex items-center gap-1 text-slate-500 shrink-0">
+                                                                        <Clock className="w-3 h-3" />
+                                                                        <span>{formatTaskDate(task.createdAt)}</span>
+                                                                    </div>
+                                                                    {!isViewer && columns.length > 1 && (
+                                                                        <div
+                                                                            className="flex items-center gap-1.5 shrink-0"
+                                                                            onPointerDown={(e) => e.stopPropagation()}
+                                                                            onMouseDown={(e) => e.stopPropagation()}
+                                                                            onTouchStart={(e) => e.stopPropagation()}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        >
+                                                                            <span className="text-slate-500 font-medium text-[10px]">Move:</span>
+                                                                            <select
+                                                                                value={column.id}
+                                                                                onChange={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    if (e.target.value && e.target.value !== column.id) {
+                                                                                        handleMoveTaskDirect(task.id, e.target.value);
+                                                                                    }
+                                                                                }}
+                                                                                onPointerDown={(e) => e.stopPropagation()}
+                                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                                                onTouchStart={(e) => e.stopPropagation()}
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                className="text-[11px] bg-slate-900 border border-slate-700 text-indigo-300 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                                                                            >
+                                                                                {columns.map((c) => (
+                                                                                    <option key={c.id} value={c.id} disabled={c.id === column.id}>
+                                                                                        {c.title} {c.id === column.id ? '✓' : ''}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </select>
+
+                                                                            {/* 1-tap quick advance to next column */}
+                                                                            {colIdx < columns.length - 1 && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        const nextCol = columns[colIdx + 1];
+                                                                                        if (nextCol) handleMoveTaskDirect(task.id, nextCol.id);
+                                                                                    }}
+                                                                                    onPointerDown={(e) => e.stopPropagation()}
+                                                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                                                    onTouchStart={(e) => e.stopPropagation()}
+                                                                                    className="px-2 py-0.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-[10px] font-bold transition cursor-pointer flex items-center gap-0.5"
+                                                                                    title={`Move to ${columns[colIdx + 1]?.title}`}
+                                                                                >
+                                                                                    <span>→</span>
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </Draggable>
                                                 ))}
                                                 {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </div>
                                 </div>
                             );
                         })}
