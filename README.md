@@ -146,8 +146,7 @@ Mini Kanban is tailored for three distinct interaction paradigms:
 * **Zero Horizontal Scrolling**: Eliminates awkward side-scrolling on phones and narrow screens by presenting stages in a clean vertical accordion layout.
 * **1-Tap Quick Advance (`→`)**: Instantly advance tasks across stages (e.g. *Backlog* → *In Progress* → *Done*) without needing tedious multi-finger drag gestures.
 * **Direct Stage Switcher (`Move: [Dropdown]`)**: Direct stage selector on every card with automatic target accordion expansion.
-* **Multi-Stage Expansion**: Tap any stage to expand/collapse, or use "Expand All / Collapse All" to inspect multiple stages simultaneously with active drag-and-drop.
-* **Desktop Auto-Grid Untouched**: On desktop and tablet screens (`md:` ≥ 768px), the layout seamlessly expands to the multi-column side-by-side auto-grid.
+* **Desktop Responsive 4-Column Multi-Row Grid**: On desktop displays, up to 4 columns fit in a single row; when a board has more than 4 columns (e.g., 5 to 8 workflow stages), the layout intelligently wraps into 2 rows vertically with smooth scrolling, preventing horizontal squishing or cramped cards.
 
 ---
 
