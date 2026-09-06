@@ -632,53 +632,55 @@ export default function BoardDetailPage() {
     return (
         <div className="min-h-screen flex flex-col">
             {/* Board Detail Header */}
-            <header className="p-4 px-6 md:px-8 border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-xl flex flex-wrap justify-between items-center gap-4 sticky top-0 z-30">
-                <div className="flex items-center gap-4">
-                    <Link
-                        href="/boards"
-                        className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
-                        title="Back to boards"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-xl font-bold text-white tracking-tight">{board?.title}</h1>
-                            {isViewer ? (
-                                <button
-                                    onClick={() => setShowPermissionsModal(true)}
-                                    className="flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-medium transition cursor-pointer"
-                                    title="Click to view permissions"
-                                >
-                                    <Eye className="w-3 h-3" /> Viewer
-                                </button>
-                            ) : isOwner ? (
-                                <button
-                                    onClick={() => setShowPermissionsModal(true)}
-                                    className="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-medium transition cursor-pointer"
-                                    title="Click to view permissions"
-                                >
-                                    Owner
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => setShowPermissionsModal(true)}
-                                    className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-medium transition cursor-pointer"
-                                    title="Click to view permissions"
-                                >
-                                    Editor
-                                </button>
+            <header className="p-3 sm:p-4 px-4 sm:px-6 md:px-8 border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 sticky top-0 z-30">
+                <div className="flex items-center justify-between w-full md:w-auto gap-3 sm:gap-4">
+                    <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                        <Link
+                            href="/boards"
+                            className="p-1.5 sm:p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
+                            title="Back to boards"
+                        >
+                            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </Link>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <h1 className="text-base sm:text-xl font-bold text-white tracking-tight truncate">{board?.title}</h1>
+                                {isViewer ? (
+                                    <button
+                                        onClick={() => setShowPermissionsModal(true)}
+                                        className="flex items-center gap-1 text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-medium transition cursor-pointer shrink-0"
+                                        title="Click to view permissions"
+                                    >
+                                        <Eye className="w-3 h-3" /> Viewer
+                                    </button>
+                                ) : isOwner ? (
+                                    <button
+                                        onClick={() => setShowPermissionsModal(true)}
+                                        className="text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-0.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-medium transition cursor-pointer shrink-0"
+                                        title="Click to view permissions"
+                                    >
+                                        Owner
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowPermissionsModal(true)}
+                                        className="text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-medium transition cursor-pointer shrink-0"
+                                        title="Click to view permissions"
+                                    >
+                                        Editor
+                                    </button>
+                                )}
+                            </div>
+                            {board?.description && (
+                                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 line-clamp-1">{board.description}</p>
                             )}
                         </div>
-                        {board?.description && (
-                            <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{board.description}</p>
-                        )}
                     </div>
                 </div>
 
-                <div className="flex items-center flex-wrap gap-3">
+                <div className="flex items-center flex-wrap gap-2 sm:gap-3 w-full md:w-auto">
                     {/* Real-time Task Search Input */}
-                    <div className="relative w-48 sm:w-64">
+                    <div className="relative flex-1 sm:w-56 md:w-64 min-w-[140px]">
                         <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -721,7 +723,7 @@ export default function BoardDetailPage() {
                     {!isViewer && (
                         <button
                             onClick={() => setShowAddColumnModal(true)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-medium border border-slate-800 text-slate-200 transition cursor-pointer"
+                            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-medium border border-slate-800 text-slate-200 transition cursor-pointer shrink-0"
                         >
                             <Plus className="w-3.5 h-3.5 text-indigo-400" /> Add Column
                         </button>
@@ -731,7 +733,7 @@ export default function BoardDetailPage() {
                     {!isViewer && (
                         <button
                             onClick={() => setShowShareModal(true)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 transition cursor-pointer"
+                            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 transition cursor-pointer shrink-0"
                         >
                             <Share2 className="w-3.5 h-3.5 text-indigo-400" /> Share
                         </button>
@@ -740,10 +742,10 @@ export default function BoardDetailPage() {
                     {/* Board Details Link */}
                     <Link
                         href={`/boards/${id}/details`}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 hover:text-white transition cursor-pointer"
+                        className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 hover:text-white transition cursor-pointer shrink-0"
                         title="View Board Details, Members & Settings"
                     >
-                        <Settings className="w-3.5 h-3.5 text-indigo-400" /> Board Details
+                        <Settings className="w-3.5 h-3.5 text-indigo-400" /> <span className="hidden sm:inline">Details</span>
                     </Link>
                 </div>
             </header>
@@ -766,16 +768,16 @@ export default function BoardDetailPage() {
                 </div>
             )}
 
-            {/* Kanban Columns Canvas - 1-Page Layout without Horizontal Scrollbar */}
-            <div className="flex-1 p-4 md:p-6 overflow-hidden flex flex-col">
+            {/* Kanban Columns Canvas - Responsive: Smooth horizontal swipe on mobile, auto-grid on desktop */}
+            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-auto overflow-y-hidden flex flex-col">
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="grid grid-flow-col auto-cols-fr gap-4 md:gap-5 h-full items-start overflow-hidden">
+                    <div className="flex md:grid md:grid-flow-col md:auto-cols-fr gap-3.5 sm:gap-4 md:gap-5 h-full items-start overflow-x-auto md:overflow-hidden pb-4 md:pb-0">
                         {filteredColumns.map((column, colIdx) => {
                             const accent = COLUMN_ACCENTS[colIdx % COLUMN_ACCENTS.length];
                             return (
                                 <div
                                     key={column.id}
-                                    className="min-w-0 flex-1 max-h-[calc(100vh-140px)] rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg"
+                                    className="w-[82vw] sm:w-[320px] shrink-0 md:w-auto md:shrink md:flex-1 md:min-w-0 max-h-[calc(100vh-140px)] rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg"
                                 >
                                     {/* Column Header */}
                                     <div className="pb-3 flex items-center justify-between border-b border-slate-800 shrink-0">
