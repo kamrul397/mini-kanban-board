@@ -844,7 +844,7 @@ export default function BoardDetailPage() {
             )}
 
             {/* Kanban Columns Canvas - Option 2: Mobile Collapsible Vertical Stacks (Accordion) + Desktop Responsive Grid (wraps after 4 columns into 2 rows) */}
-            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto flex flex-col min-h-0">
+            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto custom-scrollbar flex flex-col min-h-0">
                 {/* Mobile Accordion Header Controls (< md screens only) */}
                 {columns.length > 0 && (
                     <div className="flex md:hidden items-center justify-between px-1 pb-3 text-xs text-slate-400 shrink-0">
@@ -939,7 +939,7 @@ export default function BoardDetailPage() {
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.droppableProps}
-                                                className={`py-3 flex-1 overflow-y-auto flex flex-col gap-2.5 min-h-[140px] pr-1 [scrollbar-width:thin] ${snapshot.isDraggingOver ? 'bg-slate-800/40' : ''
+                                                className={`py-3 flex-1 overflow-y-auto flex flex-col gap-2.5 min-h-[140px] pr-1 custom-scrollbar ${snapshot.isDraggingOver ? 'bg-slate-800/40' : ''
                                                     }`}
                                             >
                                                 {column.tasks.length === 0 && !snapshot.isDraggingOver && (

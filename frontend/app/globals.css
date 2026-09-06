@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root,
+html,
+body {
+  color-scheme: dark;
+}
+
 :root {
   --background: #030712;
   --foreground: #f8fafc;
@@ -16,7 +22,12 @@ body {
   min-height: 100vh;
 }
 
-/* Custom Sleek Scrollbar */
+/* Global Modern Standard & WebKit Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -27,12 +38,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(99, 102, 241, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(99, 102, 241, 0.6);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @keyframes fadeInScale {
@@ -50,23 +67,34 @@ body {
   animation: fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom smooth thin scrollbar for directory lists */
+/* Custom smooth thin scrollbar for lists & task containers */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 9999px;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.35);
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.65);
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 
