@@ -241,6 +241,15 @@ export default function BoardDetailPage() {
         }));
     }, [columns, searchQuery]);
 
+    // Responsive Desktop Grid: 1-4 columns fit in 1 row, > 4 columns wrap into rows of 4 (e.g. 2 rows vertically)
+    const desktopGridCols = useMemo(() => {
+        const count = filteredColumns.length;
+        if (count <= 1) return 'md:grid-cols-1';
+        if (count === 2) return 'md:grid-cols-2';
+        if (count === 3) return 'md:grid-cols-3';
+        return 'md:grid-cols-2 lg:grid-cols-4';
+    }, [filteredColumns.length]);
+
     // --- Drag & Drop Task Movement ---
     const handleDragEnd = async (result: DropResult) => {
         if (isViewer) return;
@@ -834,8 +843,8 @@ export default function BoardDetailPage() {
                 </div>
             )}
 
-            {/* Kanban Columns Canvas - Option 2: Mobile Collapsible Vertical Stacks (Accordion) + Desktop Multi-Column Grid */}
-            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden md:overflow-x-auto overflow-y-auto md:overflow-y-hidden flex flex-col min-h-0">
+            {/* Kanban Columns Canvas - Option 2: Mobile Collapsible Vertical Stacks (Accordion) + Desktop Responsive Grid (wraps after 4 columns into 2 rows) */}
+            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto flex flex-col min-h-0">
                 {/* Mobile Accordion Header Controls (< md screens only) */}
                 {columns.length > 0 && (
                     <div className="flex md:hidden items-center justify-between px-1 pb-3 text-xs text-slate-400 shrink-0">
@@ -870,14 +879,18 @@ export default function BoardDetailPage() {
                 )}
 
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="flex flex-col md:grid md:grid-flow-col md:auto-cols-fr gap-3.5 sm:gap-4 md:gap-5 h-full items-start pb-6 md:pb-0">
+                    <div className={`flex flex-col md:grid ${desktopGridCols} gap-3.5 sm:gap-4 md:gap-5 items-start pb-8`}>
                         {filteredColumns.map((column, colIdx) => {
                             const accent = COLUMN_ACCENTS[colIdx % COLUMN_ACCENTS.length];
                             const isOpen = isColExpanded(column.id, colIdx);
                             return (
                                 <div
                                     key={column.id}
-                                    className="w-full md:w-auto md:shrink md:flex-1 md:min-w-0 md:max-h-[calc(100vh-140px)] rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg transition-all duration-200"
+                                    className={`w-full md:w-auto md:min-w-0 ${
+                                        filteredColumns.length <= 4
+                                            ? 'md:max-h-[calc(100vh-160px)]'
+                                            : 'md:h-[500px] md:max-h-[500px]'
+                                    } rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col p-3 shadow-lg transition-all duration-200`}
                                 >
                                     {/* Column Header (Clickable Accordion on Mobile, static on Desktop) */}
                                     <div
