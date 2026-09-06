@@ -23,7 +23,7 @@ docker compose up --build
 
 The application is deployed and publicly accessible online:
 
-* 🚀 **Live Frontend Web App (Vercel)**: [https://mini-kanban-board-5dl8ez8ay-kamrul-islams-projects-c8a75883.vercel.app](https://mini-kanban-board-5dl8ez8ay-kamrul-islams-projects-c8a75883.vercel.app/login)
+* 🚀 **Live Frontend Web App (Vercel)**: [https://mini-kanban-board-rho.vercel.app/login] (https://mini-kanban-board-rho.vercel.app/login)
 * ⚙️ **Live Backend REST API (Render)**: [https://mini-kanban-board-6ble.onrender.com/api](https://mini-kanban-board-6ble.onrender.com/api)
 * 🩺 **Live API Health Check**: [https://mini-kanban-board-6ble.onrender.com/api/health](https://mini-kanban-board-6ble.onrender.com/api/health)
 * 💻 **Local Docker URL (if running locally)**: [http://localhost:3000](http://localhost:3000)
